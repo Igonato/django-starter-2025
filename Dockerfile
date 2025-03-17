@@ -1,4 +1,4 @@
-FROM python:3.13-slim as base
+FROM python:3.13-slim AS base
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -11,22 +11,25 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=off \
     PIP_DISABLE_PIP_VERSION_CHECK=on
 
+# Install uv for dependency management
+# RUN pip install uv
+
+# Installing from source for --group flag in uv pip install
+# TODO: remove once a new version is released
+RUN apt-get update &&  apt-get install -y --no-install-recommends curl
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+RUN cargo install --git https://github.com/astral-sh/uv.git uv
+
 # Create app directory
 WORKDIR /app
-
-# Install uv for dependency management
-RUN pip install uv
 
 # Copy requirements files
 COPY pyproject.toml .
 COPY uv.lock .
 
 # Install dependencies
-RUN uv pip install --system .
-# Previous command doesn't support --group web
-# TODO: find a better workaround
-# or wait for https://github.com/astral-sh/uv/issues/8969
-RUN uv pip install --system granian
+RUN uv pip install --group web --system .
 
 # Copy project
 COPY . .
@@ -35,7 +38,7 @@ COPY . .
 RUN python manage.py collectstatic --noinput
 
 # Production image
-FROM python:3.13-slim as production
+FROM python:3.13-slim AS production
 
 WORKDIR /app
 
