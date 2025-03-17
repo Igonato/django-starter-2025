@@ -3,3 +3,28 @@ python = "latest"
 
 [env]
 _.python.venv = ".venv"
+_.file = ".env"
+
+[tasks.dev]
+description = "Run development server"
+run = "python manage.py runserver"
+
+[tasks.format]
+description = "Format code with Ruff"
+run = "ruff format ."
+
+[tasks.check]
+description = "Check code with Ruff"
+run = "ruff check ."
+
+[tasks.test]
+description = "Run tests"
+run = "python manage.py test"
+
+[tasks.migrate]
+description = "Run database migrations"
+run = "python manage.py migrate"
+
+[tasks.makemigrations]
+description = "Create new database migrations"
+run = "python manage.py makemigrations"
