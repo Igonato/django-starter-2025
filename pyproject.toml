@@ -13,3 +13,6 @@ dev = [
     "pre-commit>=4.1.0",
     "ruff>=0.11.0",
 ]
+web = [
+    "granian>=2.0.1",
+]
