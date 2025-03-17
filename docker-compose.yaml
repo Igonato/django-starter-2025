@@ -1,11 +1,20 @@
 version: "3.8"
 
 services:
+  proxy:
+    image: nginx:1.27
+    ports:
+      - "8000:80"
+    volumes:
+      - ./devops/nginx.conf:/etc/nginx/conf.d/default.conf
+      - static_volume:/var/www/html/static
+      - media_volume:/var/www/html/media
+    depends_on:
+      - web
+
   web:
     build: .
     restart: always
-    ports:
-      - "8000:8000"
     depends_on:
       - db
       - redis

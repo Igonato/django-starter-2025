@@ -26,6 +26,15 @@ DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
 
+# Trust the X-Forwarded-Proto header from our proxy
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Trust all origins from ALLOWED_HOSTS
+CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in ALLOWED_HOSTS]
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS.extend(
+        [f"http://{host}:8000" for host in ALLOWED_HOSTS]
+    )
 
 # Application definition
 
