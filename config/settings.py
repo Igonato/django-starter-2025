@@ -87,14 +87,14 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///db.sqlite3")
 
 DATABASES = {"default": dj_database_url.parse(DATABASE_URL)}
 
-# Redis Cache and Session Store (if REDIS_URL is provided)
-REDIS_URL = os.environ.get("REDIS_URL")
-if REDIS_URL:
+# Redis cache and session store (if REDIS_CACHE_URL is provided)
+REDIS_CACHE_URL = os.environ.get("REDIS_CACHE_URL")
+if REDIS_CACHE_URL:
     # Cache
     CACHES = {
         "default": {
             "BACKEND": "django.core.cache.backends.redis.RedisCache",
-            "LOCATION": REDIS_URL,
+            "LOCATION": REDIS_CACHE_URL,
         }
     }
 
