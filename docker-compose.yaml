@@ -27,6 +27,21 @@ services:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
       - REDIS_URL=redis://redis:6379/0
 
+  migration:
+    build: .
+    command: python manage.py migrate
+    # Start only if --profile migrate flag is supplied
+    # docker compose --profile migrate up migration
+    # Alternatively: docker compose exec web python manage.py migrate
+    profiles:
+      - migrate
+    depends_on:
+      - db
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
+
   db:
     image: postgres:17
     volumes:

@@ -29,7 +29,7 @@ COPY pyproject.toml .
 COPY uv.lock .
 
 # Install dependencies
-RUN uv pip install --group web --system .
+RUN uv pip install --group web --group pg --system .
 
 # Copy project
 COPY . .

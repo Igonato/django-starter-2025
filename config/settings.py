@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from pathlib import Path
 
+import dj_database_url
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -83,23 +85,22 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///db.sqlite3")
 
-if DATABASE_URL.startswith("sqlite:"):
-    DATABASES = {
+DATABASES = {"default": dj_database_url.parse(DATABASE_URL)}
+
+# Redis Cache and Session Store (if REDIS_URL is provided)
+REDIS_URL = os.environ.get("REDIS_URL")
+if REDIS_URL:
+    # Cache
+    CACHES = {
         "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / DATABASE_URL.replace("sqlite:///", ""),
-        }
-    }
-else:
-    # For future use with PostgreSQL, MySQL, etc.
-    # Will need to add dj-database-url or similar package for full support
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": REDIS_URL,
         }
     }
 
+    # Session
+    SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+    SESSION_CACHE_ALIAS = "default"
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
