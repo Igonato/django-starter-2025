@@ -1,9 +1,14 @@
 [tools]
 python = "latest"
+uv = "latest"
 
 [env]
 _.python.venv = ".venv"
 _.file = ".env"
+
+[tasks.sync]
+description = "Install Python dependencies"
+run = "uv sync --locked"
 
 [tasks.dev]
 description = "Run development server"

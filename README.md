@@ -1,5 +1,7 @@
 # Django Starter Template 2025
 
+⚠ *work in progress* ⚠
+
 A modern, minimalistic Django starter template focused on developer experience and CI/CD practices.
 
 ## Features
@@ -11,37 +13,47 @@ A modern, minimalistic Django starter template focused on developer experience a
 - **pre-commit** - Framework for managing git hooks
 
 ### Minimalistic Django Setup
-This template intentionally keeps Django dependencies minimal - no opinionated libraries (i.e. `crispy-forms`, `allauth`), or CSS frameworks are included by default.
+This template intentionally keeps Django dependencies minimal - no opinionated libraries (i.e. `crispy-forms`, `allauth`, etc...), or CSS frameworks are included by default. Just a few changes on top of the vanilla `django-admin startproject`:
+
+ - Updated `settings.py` to accept environment variables
+ - (TODO) Custom User model (nothing is different but when you need it, it should be created [before creating any migrations or running manage.py migrate for the first time](https://docs.djangoproject.com/en/5.1/topics/auth/customizing/#substituting-a-custom-user-model)
+ - (TODO) Root `urls.py` config automatically includes urls from `INSTALLED_APPS` when the app is part of the project (see `config/urls.py`)
+ - (TODO) Django Debug Toolbar for debugging during development
 
 ### Development Experience
+- Local development with just `mise sync && mise migrate && mise dev` using local sqlite file (no Docker or DB setup is needed, until your app needs it and when it does there is a `docker-compose.yaml` waiting for you)
 - Environment-based configuration via `.env` files
 - Convenient development commands via mise tasks
 - Code formatting and linting enforced via pre-commit hooks and GitHub Actions
 - GitHub Actions for continuous integration
+- (TODO) Supports pytest tests with examples (including testing async views)
+- (TODO) End-to-end tests with Playwright
 
 ### Production Readiness
 - Environment-based settings configuration
 - (TODO) Rich deployment config and CI/CD
+- (TODO) Ansible playbook for a single-instance non-containerized VPS setup
+- (TODO) Yaml configs and a guide on deploying the app to a Kubernetes cluster
+- (TODO) Backups, monitoring and alerts
 
 ## Getting Started
 
 ### Prerequisites
 - Git
 - [mise](https://github.com/jdx/mise)
-- [uv](https://github.com/astral-sh/uv) `mise install uv`
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/django-starter-2025.git
+git clone https://github.com/Igonato/django-starter-2025.git
 cd django-starter-2025
 
 # Install dependencies
-uv sync
+mise sync
 
-# Depending on your mise config you may need to run
-source .venv/bin/activate
+# Depending on your mise config you may need to manually run
+# source .venv/bin/activate
 
 # Install the pre-commit hook
 pre-commit install
@@ -49,12 +61,18 @@ pre-commit install
 # Set up the environment
 cp .env.example .env
 
+# Run migrations
+mise migrate
+# (or `mise run migrate` - the `run` is optional when there are no name
+# collisions with built-in mise commands)
+
 # Start the development server
-mise run dev
+mise dev
 ```
 
 ## Available Commands
 
+- `mise sync` - Install the Python dependencies
 - `mise dev` - Run the development server
 - `mise test` - Run tests
 - `mise format` - Format code with Ruff
@@ -64,13 +82,17 @@ mise run dev
 
 ## TODO
 
-- [ ] Add Docker and docker-compose configurations
-- [ ] Set up Ansible playbooks for deployment
-- [ ] Add Terraform configurations for infrastructure provisioning
+- [x] Add basic Docker and docker-compose configurations
+- [ ] Add a dedicated container for development?
+- [ ] SSL support for local development?
+- [ ] Set up Ansible playbooks for a VPS deployment with a GitHub Action
 - [ ] Add example of DRF API setup
-- [ ] Add example of background worker configuration
+- [ ] Add example of Celery worker configuration
 - [ ] Add example of Channels
-- [ ] Implement a deployment guide for various hosting providers
+- [ ] Implement a deployment guide for VPS
+- [ ] Implement a deployment guide for Kubernetes
+- [ ] Implement a guide for adding a SPA to the mix
+- [ ] Describe files and folder structure
 
 ## Contributing
 
