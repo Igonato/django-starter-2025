@@ -26,7 +26,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
 ]
 
-if settings.DEBUG:
+if settings.DEBUG and find_spec("debug_toolbar") is not None:
     import debug_toolbar
     from django.views.debug import default_urlconf
 

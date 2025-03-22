@@ -9,9 +9,11 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+from importlib.util import find_spec
 from pathlib import Path
 
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,7 +22,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY")
+SECRET_KEY = os.environ.get("SECRET_KEY", None)
+if SECRET_KEY is None:
+    raise ImproperlyConfigured("SECRET_KEY must be set")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
@@ -31,11 +35,17 @@ ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Trust all origins from ALLOWED_HOSTS
-CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in ALLOWED_HOSTS]
-if DEBUG:
-    CSRF_TRUSTED_ORIGINS.extend(
-        [f"http://{host}:8000" for host in ALLOWED_HOSTS]
-    )
+CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", None)
+
+if CSRF_TRUSTED_ORIGINS is None and DEBUG:
+    CSRF_TRUSTED_ORIGINS = [
+        *[f"http://{host}:8000" for host in ALLOWED_HOSTS],
+        *[f"https://{host}:8443" for host in ALLOWED_HOSTS],
+    ]
+elif CSRF_TRUSTED_ORIGINS is not None:
+    CSRF_TRUSTED_ORIGINS = CSRF_TRUSTED_ORIGINS.split(",")
+else:
+    raise ImproperlyConfigured("CSRF_TRUSTED_ORIGINS must be set")
 
 # Application definition
 
@@ -63,7 +73,7 @@ MIDDLEWARE = [
 ]
 
 
-if DEBUG:
+if DEBUG and find_spec("debug_toolbar") is not None:
     INSTALLED_APPS += [
         "debug_toolbar",
     ]

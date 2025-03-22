@@ -10,3 +10,6 @@ db.sqlite3
 db.sqlite3-journal
 staticfiles/
 media/
+
+# SSL certificates for local development
+devops/certs/

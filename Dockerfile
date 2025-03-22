@@ -9,17 +9,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=off \
-    PIP_DISABLE_PIP_VERSION_CHECK=on
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    SECRET_KEY=build-time-value-that-does-not-matter \
+    DEBUG=True
 
 # Install uv for dependency management
-# RUN pip install uv
-
-# Installing from source for --group flag in uv pip install
-# TODO: remove once a new version is released
-RUN apt-get update &&  apt-get install -y --no-install-recommends curl
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
-RUN cargo install --git https://github.com/astral-sh/uv.git uv
+RUN pip install uv
 
 # Create app directory
 WORKDIR /app
