@@ -17,8 +17,8 @@ This template intentionally keeps Django dependencies minimal - no opinionated l
 
  - Updated `settings.py` to accept environment variables
  - Custom User model (nothing is different but when you need it customized, it should be created [before creating any migrations or running manage.py migrate for the first time](https://docs.djangoproject.com/en/5.1/topics/auth/customizing/#substituting-a-custom-user-model)
- - (TODO) Root `urls.py` config automatically includes urls from `INSTALLED_APPS` when the app is part of the project (see `config/urls.py`)
- - (TODO) Django Debug Toolbar for debugging during development
+ - Root `urls.py` config automatically includes urls from `INSTALLED_APPS` when the app is part of the project (see `config/urls.py` for details)
+ - Django Debug Toolbar for debugging during development
 
 ### Development Experience
 - Local development with just `mise sync && mise migrate && mise dev` using local sqlite file (no Docker or DB setup is needed, until your app needs it and when it does there is a `docker-compose.yaml` waiting for you)
@@ -91,9 +91,9 @@ mise dev
 - [ ] Add example of Channels
 - [ ] Implement a deployment guide for VPS
 - [ ] Implement a deployment guide for Kubernetes
-- [ ] Implement a guide for adding a SPA to the mix
+- [ ] Implement a guide for adding an SPA to the mix
 - [ ] Describe files and folder structure
-- [ ] Double check Django settigns
+- [ ] Double check Django settings
 
 ## Contributing
 
