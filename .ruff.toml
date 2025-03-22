@@ -10,6 +10,9 @@ lint.select = [
 ]
 lint.ignore = []
 
+[lint.per-file-ignores]
+"*/migrations/*.py" = ["E501", "F401"]
+
 [format]
 quote-style = "double"
 indent-style = "space"

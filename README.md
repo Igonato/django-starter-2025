@@ -16,7 +16,7 @@ A modern, minimalistic Django starter template focused on developer experience a
 This template intentionally keeps Django dependencies minimal - no opinionated libraries (i.e. `crispy-forms`, `allauth`, etc...), or CSS frameworks are included by default. Just a few changes on top of the vanilla `django-admin startproject`:
 
  - Updated `settings.py` to accept environment variables
- - (TODO) Custom User model (nothing is different but when you need it, it should be created [before creating any migrations or running manage.py migrate for the first time](https://docs.djangoproject.com/en/5.1/topics/auth/customizing/#substituting-a-custom-user-model)
+ - Custom User model (nothing is different but when you need it customized, it should be created [before creating any migrations or running manage.py migrate for the first time](https://docs.djangoproject.com/en/5.1/topics/auth/customizing/#substituting-a-custom-user-model)
  - (TODO) Root `urls.py` config automatically includes urls from `INSTALLED_APPS` when the app is part of the project (see `config/urls.py`)
  - (TODO) Django Debug Toolbar for debugging during development
 
@@ -93,6 +93,7 @@ mise dev
 - [ ] Implement a deployment guide for Kubernetes
 - [ ] Implement a guide for adding a SPA to the mix
 - [ ] Describe files and folder structure
+- [ ] Double check Django settigns
 
 ## Contributing
 
