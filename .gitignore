@@ -12,4 +12,6 @@ staticfiles/
 media/
 
 # SSL certificates for local development
-devops/certs/
+devops/certs/*.key
+devops/certs/*.crt
+devops/certs/*.pem

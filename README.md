@@ -53,7 +53,8 @@ cd django-starter-2025
 mise sync
 
 # Depending on your mise config you may need to manually run
-# source .venv/bin/activate
+# source .venv/bin/activate  # Unix/Mac
+# .venv\Scripts\activate     # Windows
 
 # Install the pre-commit hook
 pre-commit install
@@ -80,11 +81,36 @@ mise dev
 - `mise migrate` - Apply database migrations
 - `mise makemigrations` - Create new migrations
 
+## Local SSL
+
+It's important to test your app in an environment as close to your production setup as possible, that includes TLS. Certain browser features can behave differently over https.
+
+If you already use `mkcert` (can be installed with `mise use -g mkcert && mkcert -install`) and have its CA installed, you can use your local `mkcert`
+to generate certificates by running:
+
+```bash
+mkcert \
+    -cert-file devops/certs/selfsigned.crt \
+    -key-file devops/certs/selfsigned.key \
+    localhost 127.0.0.1
+```
+
+Otherwise the certificates will be generated for you on the first `docker compose up` and placed in `devops/certs` folder.
+
+If you want to suppress the browser's security warning, add `rootCA.pem` (from `devops/certs` or `mkcert -CAROOT`), to trusted Authorities:
+
+1. Open your browser settings and search for "certificates"
+2. Click "Manage certificates" and go to "Authorities" tab
+3. Click "Import" and select the rootCA.pem file from the certs directory
+4. Check "Trust this certificate for identifying websites"
+5. Click OK and restart your browser
+
+
 ## TODO
 
 - [x] Add basic Docker and docker-compose configurations
 - [ ] Add a dedicated container for development?
-- [ ] SSL support for local development?
+- [x] SSL support for local development?
 - [ ] Set up Ansible playbooks for a VPS deployment with a GitHub Action
 - [ ] Add example of DRF API setup
 - [ ] Add example of Celery worker configuration

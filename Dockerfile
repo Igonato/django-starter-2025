@@ -47,4 +47,4 @@ RUN useradd -m -s /bin/bash app && chown -R app:app /app
 USER app
 
 # Start Granian server
-CMD ["granian", "--interface", "asgi", "--host", "0.0.0.0", "--port", "8000", "config.asgi:application"]
+CMD ["granian", "config.asgi:application"]
