@@ -22,7 +22,7 @@ This template intentionally keeps Django dependencies minimal - no opinionated l
 
 ### Developer Experience
 - Local development with just `mise sync && mise migrate && mise dev` using local sqlite file (no Docker or DB setup is needed, until your app needs it and when it does there is a `docker-compose.yaml` waiting for you)
-- Environment-based configuration via `.env` files
+- Environment-based configuration via `.env` file
 - Convenient development commands via mise tasks
 - Code formatting and linting enforced via pre-commit hooks and GitHub Actions
 - GitHub Actions for continuous integration
@@ -59,13 +59,13 @@ mise sync
 # Install the pre-commit hook
 pre-commit install
 
-# Set up the environment
-cp .env.example .env
+# Set up the devlopment environment variables
+cp .env.example .env  # and edit as needed
 
 # Run migrations
 mise migrate
 # (or `mise run migrate` - the `run` is optional when there are no name
-# collisions with built-in mise commands)
+# collisions with the built-in mise commands)
 
 # Start the development server
 mise dev
@@ -97,7 +97,7 @@ mkcert \
 
 Otherwise the certificates will be generated for you on the first `docker compose up` and placed in `devops/certs` folder.
 
-If you want to suppress the browser's security warning, add `rootCA.pem` (from `devops/certs` or `mkcert -CAROOT`), to trusted Authorities:
+If you want to suppress the browser's security warning, add `rootCA.pem` (from `devops/certs` or `mkcert -CAROOT`) to trusted Authorities:
 
 1. Open your browser settings and search for "certificates"
 2. Click "Manage certificates" and go to "Authorities" tab
@@ -114,7 +114,7 @@ If you want to suppress the browser's security warning, add `rootCA.pem` (from `
 - [ ] Set up Ansible playbooks for a VPS deployment with a GitHub Action
 - [ ] Add example of DRF API setup
 - [ ] Add example of Celery worker configuration
-- [ ] Add example of Channels
+- [ ] Add example of Channels setup
 - [ ] Implement a deployment guide for VPS
 - [ ] Implement a deployment guide for Kubernetes
 - [ ] Implement a guide for adding an SPA to the mix

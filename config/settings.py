@@ -15,6 +15,18 @@ from pathlib import Path
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 
+ENV = os.environ.get("DJANGO_ENVIRONMENT", "production").lower()
+BUILD = ENV == "build"
+DEVELOPMENT = ENV == "development"
+PRODUCTION = ENV == "production"
+TEST = ENV == "test"
+if not any((BUILD, DEVELOPMENT, PRODUCTION, TEST)):
+    raise ImproperlyConfigured(
+        "DJANGO_ENVIRONMENT must be set to one of the following: "
+        "'build', 'development', 'production' or 'test'"
+    )
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -23,7 +35,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get("SECRET_KEY", None)
-if SECRET_KEY is None:
+if SECRET_KEY is None and not BUILD:
     raise ImproperlyConfigured("SECRET_KEY must be set")
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -44,7 +56,7 @@ if CSRF_TRUSTED_ORIGINS is None and DEBUG:
     ]
 elif CSRF_TRUSTED_ORIGINS is not None:
     CSRF_TRUSTED_ORIGINS = CSRF_TRUSTED_ORIGINS.split(",")
-else:
+elif PRODUCTION:
     raise ImproperlyConfigured("CSRF_TRUSTED_ORIGINS must be set")
 
 # Application definition

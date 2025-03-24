@@ -1,17 +1,16 @@
 FROM python:3.13-slim AS base
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=off \
     PIP_DISABLE_PIP_VERSION_CHECK=on \
-    SECRET_KEY=build-time-value-that-does-not-matter \
-    DEBUG=True
+    DJANGO_ENVIRONMENT=build
+
+# Install system dependencies (uncomment if required by a dependency)
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     build-essential \
+#     && rm -rf /var/lib/apt/lists/*
 
 # Install uv for dependency management
 RUN pip install uv
@@ -25,6 +24,7 @@ COPY uv.lock .
 
 # Install dependencies
 RUN uv pip install --group web --group pg --system .
+RUN pip uninstall -y pip setuptools uv
 
 # Copy project
 COPY . .

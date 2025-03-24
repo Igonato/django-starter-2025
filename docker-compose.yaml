@@ -52,7 +52,7 @@ services:
       - GRANIAN_PORT=8000
       - GRANIAN_WORKERS=4
       - DEBUG=False
-      - CSRF_TRUSTED_ORIGINS=https://localhost,https://0.0.0.0
+      - CSRF_TRUSTED_ORIGINS=https://localhost,https://localhost:8443
       - DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
       - REDIS_CACHE_URL=redis://redis:6379/0
 
