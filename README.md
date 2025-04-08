@@ -1,6 +1,7 @@
 # Django Starter Template 2025
 
-⚠ *work in progress* ⚠
+> [!WARNING]
+> *work in progress*
 
 A modern, minimalistic Django starter template focused on developer experience and CI/CD practices.
 

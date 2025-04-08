@@ -1,18 +1,22 @@
 [tools]
-python = "latest"
-uv = "latest"
+python = "3.13"
+uv = "0.6.13"
+watchexec = "2.3"
 
 [env]
 _.python.venv = ".venv"
 _.file = ".env"
 
-[tasks.sync]
-description = "Install Python dependencies"
-run = "uv sync --locked"
 
 [tasks.dev]
+description = "Watch .env for changes and run development server"
+run = "watchexec -r -w .env mise _dev"
+silent = true
+
+[tasks._dev]
 description = "Run development server"
 run = "python manage.py runserver"
+silent = true
 
 [tasks.format]
 description = "Format code with Ruff"

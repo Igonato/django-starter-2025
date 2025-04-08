@@ -65,16 +65,16 @@ wheels = [
 
 [[package]]
 name = "django"
-version = "5.2rc1"
+version = "5.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "asgiref" },
     { name = "sqlparse" },
     { name = "tzdata", marker = "sys_platform == 'win32'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/11/31/661e007060abcba476344e7cfe9b3bd34835ae358abfea0e507886a11493/Django-5.2rc1.tar.gz", hash = "sha256:01ab1a67decfae1acb2c3fad9937702bb801279177845bd3dcccc09dcc001e72", size = 10817143 }
+sdist = { url = "https://files.pythonhosted.org/packages/4c/1b/c6da718c65228eb3a7ff7ba6a32d8e80fa840ca9057490504e099e4dd1ef/Django-5.2.tar.gz", hash = "sha256:1a47f7a7a3d43ce64570d350e008d2949abe8c7e21737b351b6a1611277c6d89", size = 10824891 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/89/90/cbc3d95cabce6ae81c9b56301c2ba6f22198193edcf8b17d35f91500a344/Django-5.2rc1-py3-none-any.whl", hash = "sha256:726866ec5a76cf1914141e05c734cf901fb06a7c3e784d4d734178a9440b2682", size = 8295671 },
+    { url = "https://files.pythonhosted.org/packages/63/e0/6a5b5ea350c5bd63fe94b05e4c146c18facb51229d9dee42aa39f9fc2214/Django-5.2-py3-none-any.whl", hash = "sha256:91ceed4e3a6db5aedced65e3c8f963118ea9ba753fc620831c77074e620e7d83", size = 8301361 },
 ]
 
 [[package]]
@@ -116,7 +116,7 @@ web = [
 [package.metadata]
 requires-dist = [
     { name = "dj-database-url", specifier = ">=2.3.0" },
-    { name = "django", specifier = ">=5.2rc1" },
+    { name = "django", specifier = ">=5.2" },
 ]
 
 [package.metadata.requires-dev]

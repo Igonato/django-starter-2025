@@ -19,6 +19,9 @@ RUN pip install uv
 WORKDIR /app
 
 # Copy requirements files
+# TODO: verify that `uv pip install` actually respects the `uv.lock` file
+# documentation doesn't mention it and I have a sneeking suspicion that it
+# doesn't respect it and `uv pip compile`(?) should be used instead
 COPY pyproject.toml .
 COPY uv.lock .
 
