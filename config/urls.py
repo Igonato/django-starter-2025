@@ -26,16 +26,6 @@ urlpatterns = [
     path("admin/", admin.site.urls),
 ]
 
-if settings.DEBUG and find_spec("debug_toolbar") is not None:
-    import debug_toolbar
-    from django.views.debug import default_urlconf
-
-    urlpatterns = [
-        # Restore the default view that displays Django welcome page
-        path("", default_urlconf),
-        path("__debug__/", include(debug_toolbar.urls)),
-    ] + urlpatterns
-
 # Automatically add urls form urls.py for installed project apps
 for app in apps.get_app_configs():
     if not app.path.startswith(str(settings.BASE_DIR)):
@@ -46,3 +36,13 @@ for app in apps.get_app_configs():
     module = app.name + ".urls"
     if find_spec(module) is not None and module != __name__:
         urlpatterns += [path("", include(module))]
+
+if settings.DEBUG and find_spec("debug_toolbar") is not None:
+    import debug_toolbar
+    from django.views.debug import default_urlconf
+
+    urlpatterns += [
+        # Restore the default view that displays Django welcome page
+        path("", default_urlconf),
+        path("__debug__/", include(debug_toolbar.urls)),
+    ]
