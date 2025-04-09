@@ -8,15 +8,31 @@ _.python.venv = ".venv"
 _.file = ".env"
 
 
-[tasks.dev]
-description = "Watch .env for changes and run development server"
-run = "watchexec -r -w .env mise _dev"
-silent = true
+[tasks.uv-sync-dev]
+description = "Make sure that the project dependencies are installed"
+run = "uv sync --locked"
 
-[tasks._dev]
+[tasks.setup-dev]
+# depends with multiple values messes up dev server output for some reason
+# depends = ["_dotenvexists", "uv-sync-dev"]
+run = [
+    "mise run _dotenvexists",
+    "mise run uv-sync-dev",
+]
+
+[tasks.dev]
+depends = ["setup-dev"]
+description = "Watch .env for changes and run development server"
+run = "watchexec -r -w .env mise runserver"
+
+[tasks.runserver]
 description = "Run development server"
 run = "python manage.py runserver"
-silent = true
+
+[tasks._dotenvexists]
+description = "Check that .env file exists or copy from .env.example"
+hide = true
+run = "[ ! -f .env ] && cp .env.example .env || true"
 
 [tasks.format]
 description = "Format code with Ruff"
