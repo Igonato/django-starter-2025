@@ -50,8 +50,12 @@ This template intentionally keeps Django dependencies minimal - no opinionated l
 git clone https://github.com/Igonato/django-starter-2025.git
 cd django-starter-2025
 
+# Install tools
+mise trust
+mise install
+
 # Install dependencies
-mise sync
+uv sync
 
 # Depending on your mise config you may need to manually run
 # source .venv/bin/activate  # Unix/Mac
