@@ -4,7 +4,6 @@
 Dockerfile
 README.md
 db.sqlite3
-devops
 docker-compose.yml
 media
 staticfiles

@@ -15,7 +15,7 @@ from pathlib import Path
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 
-ENV = os.environ.get("DJANGO_ENVIRONMENT", "production").lower()
+ENV = os.getenv("DJANGO_ENVIRONMENT", "production").lower()
 BUILD = ENV == "build"
 DEVELOPMENT = ENV == "development"
 PRODUCTION = ENV == "production"
@@ -34,28 +34,30 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY", None)
+SECRET_KEY = os.getenv("SECRET_KEY", None)
 if SECRET_KEY is None and not BUILD:
     raise ImproperlyConfigured("SECRET_KEY must be set")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 # Trust the X-Forwarded-Proto header from our proxy
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Trust all origins from ALLOWED_HOSTS
-CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", None)
+_csrf_trusted_origins_str = os.getenv("CSRF_TRUSTED_ORIGINS", None)
 
-if CSRF_TRUSTED_ORIGINS is None and DEBUG:
+if _csrf_trusted_origins_str is None and DEBUG:
     CSRF_TRUSTED_ORIGINS = [
+        *[f"http://{host}:80" for host in ALLOWED_HOSTS],
         *[f"http://{host}:8000" for host in ALLOWED_HOSTS],
+        *[f"https://{host}:443" for host in ALLOWED_HOSTS],
         *[f"https://{host}:8443" for host in ALLOWED_HOSTS],
     ]
-elif CSRF_TRUSTED_ORIGINS is not None:
-    CSRF_TRUSTED_ORIGINS = CSRF_TRUSTED_ORIGINS.split(",")
+elif _csrf_trusted_origins_str is not None:
+    CSRF_TRUSTED_ORIGINS = _csrf_trusted_origins_str.split(",")
 elif PRODUCTION:
     raise ImproperlyConfigured("CSRF_TRUSTED_ORIGINS must be set")
 
@@ -123,12 +125,12 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///db.sqlite3")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///db.sqlite3")
 
 DATABASES = {"default": dj_database_url.parse(DATABASE_URL)}
 
 # Redis cache and session store (if REDIS_CACHE_URL is provided)
-REDIS_CACHE_URL = os.environ.get("REDIS_CACHE_URL")
+REDIS_CACHE_URL = os.getenv("REDIS_CACHE_URL")
 if REDIS_CACHE_URL:
     # Cache
     CACHES = {
@@ -179,9 +181,74 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
+# Optionally via django-storages
+# https://django-storages.readthedocs.io/en/latest/
 
-STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
+if os.getenv("USE_S3", "False").lower() == "true":
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "access_key": os.getenv("S3_ACCESS_KEY_ID"),
+                "secret_key": os.getenv("S3_SECRET_ACCESS_KEY"),
+                "bucket_name": os.getenv(
+                    "S3_STORAGE_BUCKET_NAME_MEDIA", "django-media"
+                ),
+                "endpoint_url": os.getenv("S3_ENDPOINT_URL", "http://s3:3900"),
+                "region_name": os.getenv("S3_REGION_NAME"),
+                "custom_domain": os.getenv("S3_CUSTOM_DOMAIN_MEDIA"),
+                "url_protocol": os.getenv("S3_URL_PROTOCOL", "https:"),
+                "default_acl": "public-read",
+                "object_parameters": {
+                    "CacheControl": "max-age=86400",
+                },
+                "querystring_auth": True,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "access_key": os.getenv("S3_ACCESS_KEY_ID"),
+                "secret_key": os.getenv("S3_SECRET_ACCESS_KEY"),
+                "bucket_name": os.getenv(
+                    "S3_STORAGE_BUCKET_NAME_STATIC", "django-static"
+                ),
+                "endpoint_url": os.getenv("S3_ENDPOINT_URL", "http://s3:3900"),
+                "region_name": os.getenv("S3_REGION_NAME"),
+                "custom_domain": os.getenv("S3_CUSTOM_DOMAIN_STATIC"),
+                "url_protocol": os.getenv("S3_URL_PROTOCOL", "https:"),
+                "default_acl": "public-read",
+                "object_parameters": {
+                    "CacheControl": "max-age=31536000",
+                },
+                "querystring_auth": False,
+            },
+        },
+    }
+
+    # Media files
+    if os.environ.get("S3_CUSTOM_DOMAIN"):
+        domain = os.environ.get("S3_CUSTOM_DOMAIN")
+        MEDIA_URL = f"http://{domain}/s3/media/"
+        STATIC_URL = f"http://{domain}/django-static/"
+    else:
+        MEDIA_URL = "/s3/media/"
+        STATIC_URL = "/s3/static/"
+else:
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+
+    STATIC_URL = "static/"
+    STATIC_ROOT = BASE_DIR / "staticfiles"
+
+    MEDIA_URL = "media/"
+    MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

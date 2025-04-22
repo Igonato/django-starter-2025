@@ -1,6 +1,59 @@
-version: "3.8"
-
 services:
+  certs:
+    build: ./devops/certs
+    volumes:
+      - ./devops/certs:/certs
+
+  web:
+    build: .
+    restart: always
+    depends_on:
+      - db
+      - redis
+      - s3
+    env_file:
+      - .env
+    volumes:
+      - ./devops/wait-for-it.sh:/app/wait-for-it.sh
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    environment:
+      # ASGI webserver. See: https://github.com/emmett-framework/granian
+      - GRANIAN_INTERFACE=asginl
+      - GRANIAN_HOST=0.0.0.0
+      - GRANIAN_PORT=8000
+      - GRANIAN_WORKERS=4
+
+      # Generic Django settings
+      - DEBUG=True
+      - CSRF_TRUSTED_ORIGINS=https://localhost,https://localhost:8443
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
+      - REDIS_CACHE_URL=redis://redis:6379/0
+
+      # Configuration for django-storages
+      # See: https://django-storages.readthedocs.io/en/latest/index.html
+      - USE_S3=True
+      - S3_CUSTOM_DOMAIN_STATIC=localhost:8443/s3/static
+      - S3_CUSTOM_DOMAIN_MEDIA=localhost:8443/s3/media
+      # Set during the initialisation in the devops/s3/entrypoint.sh
+      - S3_ACCESS_KEY_ID=GKe8f1ee30bf22a8bc86f0d7a2
+      - S3_SECRET_ACCESS_KEY=f49ac00018a30c5060dc07eeacc156781d21c67d38eadff79b52f393a1c4fd87
+      # This is specified in garage.toml
+      - S3_REGION_NAME=garage
+
+    command: >
+      sh -c "
+        chmod +x wait-for-it.sh &&
+        ./wait-for-it.sh s3:3900 --timeout=30 &&
+        python manage.py collectstatic --noinput
+        ./wait-for-it.sh db:5432 --timeout=30 &&
+        python manage.py migrate --noinput &&
+        granian config.asgi:application &
+        sleep 3 &&
+        echo '🚀 Your site is running at: https://localhost:8443' &&
+        wait
+      "
+
   proxy:
     image: nginx:1.27
     ports:
@@ -22,55 +75,8 @@ services:
         do
           sleep 1;
         done &&
-        nginx -g 'daemon off;' &
-        sleep 3 &&
-        echo '🚀 Your site is running at: https://localhost:8443' &&
-        wait
+        nginx -g 'daemon off;'
       "
-
-  certs:
-    build:
-      context: ./devops/certs
-      dockerfile: Dockerfile
-    volumes:
-      - ./devops/certs:/certs
-
-  web:
-    build: .
-    restart: always
-    depends_on:
-      - db
-      - redis
-    env_file:
-      - .env
-    volumes:
-      - static_volume:/app/staticfiles
-      - media_volume:/app/media
-    environment:
-      - GRANIAN_INTERFACE=asginl
-      - GRANIAN_HOST=0.0.0.0
-      - GRANIAN_PORT=8000
-      - GRANIAN_WORKERS=4
-      - DEBUG=False
-      - CSRF_TRUSTED_ORIGINS=https://localhost,https://localhost:8443
-      - DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
-      - REDIS_CACHE_URL=redis://redis:6379/0
-
-  migration:
-    build: .
-    command: python manage.py migrate
-    # Start only if --profile migrate flag is supplied
-    # docker compose --profile migrate up migration
-    # Alternatively: docker compose exec web python manage.py migrate
-    profiles:
-      - migrate
-    depends_on:
-      - db
-      - web
-    env_file:
-      - .env
-    environment:
-      - DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
 
   db:
     image: postgres:17
@@ -87,8 +93,27 @@ services:
     volumes:
       - redis_data:/data
 
+  s3:
+    build:
+      context: .
+      dockerfile: ./devops/s3/Dockerfile
+
+    # ports:
+    #   - "3900:3900" # S3 API
+    #   - "3901:3901" # Admin API
+    #   - "3902:3902" # Web server for buckets
+    #   - "3903:3903" # Admin API server
+    #   - "3904:3904" # K2V API
+
+    volumes:
+      - ./devops/s3/garage-dev-config.toml:/etc/garage.toml
+      - garage_data:/var/lib/garage/data
+      - garage_meta:/var/lib/garage/meta
+
 volumes:
+  garage_data:
+  garage_meta:
+  media_volume:
   postgres_data:
   redis_data:
   static_volume:
-  media_volume:

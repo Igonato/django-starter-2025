@@ -39,10 +39,14 @@ for app in apps.get_app_configs():
 
 if settings.DEBUG and find_spec("debug_toolbar") is not None:
     import debug_toolbar
+    from django.conf.urls.static import static
     from django.views.debug import default_urlconf
 
     urlpatterns += [
         # Restore the default view that displays Django welcome page
         path("", default_urlconf),
+        # Debug toolbar URLs
         path("__debug__/", include(debug_toolbar.urls)),
+        # Serve uploaded files during development
+        static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
     ]
