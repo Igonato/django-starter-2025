@@ -1,4 +1,4 @@
-FROM python:3.13.2-slim AS builder
+FROM python:3.13.3-slim AS builder
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
