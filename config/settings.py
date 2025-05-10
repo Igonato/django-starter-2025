@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+from ast import literal_eval
 from importlib.util import find_spec
 from pathlib import Path
 
@@ -72,7 +73,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # Third-party apps:
+    "channels",
     # Project apps:
+    "examples",
     "users",
 ]
 
@@ -85,6 +88,17 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+
+if DEVELOPMENT:
+    INSTALLED_APPS = [
+        "daphne",
+        "django_browser_reload",
+    ] + INSTALLED_APPS
+
+    MIDDLEWARE += [
+        "django_browser_reload.middleware.BrowserReloadMiddleware",
+    ]
 
 
 if DEBUG and find_spec("debug_toolbar") is not None:
@@ -119,6 +133,7 @@ TEMPLATES = [
     },
 ]
 
+ASGI_APPLICATION = "config.asgi.application"
 WSGI_APPLICATION = "config.wsgi.application"
 
 
@@ -259,3 +274,14 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # https://docs.djangoproject.com/en/5.2/topics/auth/customizing/
 
 AUTH_USER_MODEL = "users.User"
+
+# Channels configuration (support for WebSockets and background workers)
+# https://channels.readthedocs.io/en/latest/index.html
+CHANNEL_LAYERS = {
+    "default": literal_eval(
+        os.getenv(
+            "CHANNEL_LAYER",
+            "{'BACKEND': 'channels.layers.InMemoryChannelLayer'}",
+        )
+    )
+}

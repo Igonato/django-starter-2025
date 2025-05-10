@@ -26,7 +26,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
 ]
 
-# Automatically add urls form urls.py for installed project apps
+# Automatically add urlpatterns from urls.py for installed project apps
 for app in apps.get_app_configs():
     if not app.path.startswith(str(settings.BASE_DIR)):
         continue
@@ -37,7 +37,11 @@ for app in apps.get_app_configs():
     if find_spec(module) is not None and module != __name__:
         urlpatterns += [path("", include(module))]
 
-if settings.DEBUG and find_spec("debug_toolbar") is not None:
+if (
+    settings.DEBUG
+    and find_spec("debug_toolbar") is not None
+    and find_spec("django_browser_reload") is not None
+):
     import debug_toolbar
     from django.conf.urls.static import static
     from django.views.debug import default_urlconf
@@ -47,6 +51,7 @@ if settings.DEBUG and find_spec("debug_toolbar") is not None:
         path("", default_urlconf),
         # Debug toolbar URLs
         path("__debug__/", include(debug_toolbar.urls)),
+        # Development auto-reload endpoint
+        path("__reload__/", include("django_browser_reload.urls")),
         # Serve uploaded files during development
-        static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
-    ]
+    ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -18,6 +18,8 @@ services:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
     environment:
+      - DJANGO_ENVIRONMENT=production
+
       # ASGI webserver. See: https://github.com/emmett-framework/granian
       - GRANIAN_INTERFACE=asginl
       - GRANIAN_HOST=0.0.0.0
@@ -40,6 +42,9 @@ services:
       - S3_SECRET_ACCESS_KEY=f49ac00018a30c5060dc07eeacc156781d21c67d38eadff79b52f393a1c4fd87
       # This is specified in garage.toml
       - S3_REGION_NAME=garage
+
+      # Channels
+      - CHANNEL_LAYER={"BACKEND":"channels_redis.core.RedisChannelLayer","CONFIG":{"hosts":[["redis", 6379]]}}
 
     command: >
       sh -c "
