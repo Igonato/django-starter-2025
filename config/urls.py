@@ -21,10 +21,19 @@ from django.apps import apps
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
+from django.views.debug import default_urlconf
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path(settings.ADMIN_URL, admin.site.urls),
 ]
+
+if settings.DEBUG:
+    urlpatterns += [
+        # Restore the default view that displays Django welcome page
+        # (normally it would be gone when we include extra urls like the
+        # ones from the Debug Toolbar or django-browser-reload)
+        path("", default_urlconf),
+    ]
 
 # Automatically add urlpatterns from urls.py for installed project apps
 for app in apps.get_app_configs():
@@ -44,11 +53,8 @@ if (
 ):
     import debug_toolbar
     from django.conf.urls.static import static
-    from django.views.debug import default_urlconf
 
     urlpatterns += [
-        # Restore the default view that displays Django welcome page
-        path("", default_urlconf),
         # Debug toolbar URLs
         path("__debug__/", include(debug_toolbar.urls)),
         # Development auto-reload endpoint

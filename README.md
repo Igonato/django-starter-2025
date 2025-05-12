@@ -5,6 +5,75 @@
 
 A modern, minimalistic Django starter template focused on developer experience and CI/CD practices.
 
+## Quickstart
+
+### Setup the Project Files
+
+To use the template you can click on the `Use this template` button at the top right and then clone your newly created repo, or do the same using GitHub CLI:
+
+```
+gh repo create my-project --template Igonato/django-starter-2025 --private # or --public
+gh repo clone my-project
+
+# Alternatively, you can just clone the template:
+# git clone https://github.com/Igonato/django-starter-2025.git my-project
+
+cd my-project
+```
+
+This template comes with a few examples that are used to test the setup and to showcase the available features. Keep them if you're learning but in a real-life project, remove the examples folder and remove 'examples' from the `INSTALLED_APPS` in the `config/settings.py`:
+
+```bash
+rm -rf examples
+sed -i '/^\s*"examples",$/d' config/settings.py
+```
+
+### Option 1: Using Mise
+
+Assuming [mise] is installed.
+
+```bash
+# Copy the .env from the provided example:
+cp .env.example .env
+
+# Trust the mise.toml config (feel free to inspect it beforehand)
+# and install the runtime dependencies (Python, uv, watchexec, ...).
+# If your project needs NodeJS or anything else from what is available at
+# https://mise.jdx.dev/registry.html, you can add those to mise.toml by
+# running `mise use node@22` and the next `mise install` will install
+# the appropriate tools for any other person working on your project
+mise trust && mise install
+
+# Create virtual environment and install Python dependencies
+uv venv && uv sync --locked
+
+# Install pre-commit
+pre-commit isntall
+
+# Create the (SQlite by default) database
+mise migrate
+
+# Start the development server
+mise dev
+```
+
+### Option 2: Using Docker
+
+Assuming [docker] is installed.
+
+TODO
+
+### Option 3: Mise + Docker
+
+Both [mise] and [docker] need to be present.
+
+Run django development server locally and use Docker compose for Postgres, Redis, etc...
+
+TODO
+
+[mise]: https://github.com/jdx/mise
+[docker]: https://www.docker.com/
+
 ## Features
 
 ### Modern Development Tools
@@ -14,12 +83,19 @@ A modern, minimalistic Django starter template focused on developer experience a
 - **pre-commit** - Framework for managing git hooks
 
 ### Minimalistic Django Setup
-This template intentionally keeps Django dependencies minimal - no opinionated libraries (i.e. `crispy-forms`, `allauth`, etc...), or CSS frameworks are included by default. Just a few changes on top of the vanilla `django-admin startproject`:
+This template intentionally keeps Django dependencies minimal - no CSS frameworks or opinionated libraries (i.e. `crispy-forms`, `allauth`, etc...) are included by default. Just a few changes on top of the vanilla `django-admin startproject`:
 
- - Updated `settings.py` to accept environment variables
- - Custom User model (nothing is different but when you need it customized, it should be created [before creating any migrations or running manage.py migrate for the first time](https://docs.djangoproject.com/en/5.2/topics/auth/customizing/#substituting-a-custom-user-model)
- - Root `urls.py` config automatically includes urls from `INSTALLED_APPS` when the app is part of the project (see `config/urls.py` for details)
- - Django Debug Toolbar for debugging during development
+- Updated `settings.py` to accept environment variables
+- Custom User model (nothing is different but when you need it customized, it should be created [before creating any migrations or running manage.py migrate for the first time](https://docs.djangoproject.com/en/5.2/topics/auth/customizing/#substituting-a-custom-user-model)
+- Root `urls.py` config automatically includes urls from `INSTALLED_APPS` when the app is part of the project (see `config/urls.py` for details)
+- Channels setup for WebSockets and background tasks (see `examples`)
+
+And some developer tools:
+
+- Django Debug Toolbar for debugging during development
+- `django-browser-reload` for automatically reloading browser on file change
+
+<!--
 
 ### Developer Experience
 - Local development with just `mise sync && mise migrate && mise dev` using local sqlite file (no Docker or DB setup is needed, until your app needs it and when it does there is a `docker-compose.yaml` waiting for you)
@@ -129,6 +205,8 @@ If you want to suppress the browser's security warning, add `rootCA.pem` (from `
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+-->
 
 ## License
 
