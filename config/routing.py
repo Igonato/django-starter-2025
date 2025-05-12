@@ -5,6 +5,8 @@ from django.apps import apps
 from django.conf import settings
 
 urlpatterns = []
+name_routes = {}
+
 
 # Automatically add urlpatterns from routing.py for installed project apps
 for app in apps.get_app_configs():
@@ -18,3 +20,4 @@ for app in apps.get_app_configs():
         routing = import_module(module)
         urlpatterns += getattr(routing, "urlpatterns", [])
         urlpatterns += getattr(routing, "websocket_urlpatterns", [])
+        name_routes.update(getattr(routing, "name_routes", {}))

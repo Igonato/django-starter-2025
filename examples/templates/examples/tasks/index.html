@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Background Tasks</title>
+    </head>
+    <body>
+        Spawn a background task with a message<br />
+        (ensure that
+        <code>python manage.py runworker background-task-example</code> is
+        running and redis chanel layer is used)<br />
+        <input id="task-message-input" type="text" size="100" /><br />
+        <input id="task-message-submit" type="button" value="Spawn" />
+
+        <script>
+            document.querySelector("#task-message-input").focus();
+            document.querySelector("#task-message-input").onkeyup = function (
+                e,
+            ) {
+                if (e.key === "Enter") {
+                    // enter, return
+                    document.querySelector("#task-message-submit").click();
+                }
+            };
+
+            function getCSRFToken() {
+                const cookies = document.cookie.split(";");
+                for (let cookie of cookies) {
+                    const [name, value] = cookie.trim().split("=");
+                    if (name === "csrftoken") {
+                        return value;
+                    }
+                }
+                return "";
+            }
+
+            document.querySelector("#task-message-submit").onclick = function (
+                e,
+            ) {
+                var input = document.querySelector("#task-message-input");
+                var message = input.value;
+                input.value = "";
+
+                fetch(window.location.href, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCSRFToken(),
+                    },
+                    body: JSON.stringify({ message: message }),
+                });
+            };
+        </script>
+    </body>
+</html>

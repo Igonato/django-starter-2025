@@ -1,6 +1,7 @@
 import json
 
 from asgiref.sync import async_to_sync
+from channels.consumer import SyncConsumer
 from channels.generic.websocket import WebsocketConsumer
 from django.db.utils import ImproperlyConfigured
 
@@ -50,3 +51,8 @@ class ChatConsumer(WebsocketConsumer):
 
         # Send message to WebSocket
         self.send(text_data=json.dumps({"message": message}))
+
+
+class BackgroundTaskConsumer(SyncConsumer):
+    def message(self, message):
+        print("Recieved message: " + message["text"])

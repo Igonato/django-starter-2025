@@ -10,7 +10,7 @@ https://docs.djangoproject.com/en/5.1/howto/deployment/asgi/
 import os
 
 from channels.auth import AuthMiddlewareStack
-from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.routing import ChannelNameRouter, ProtocolTypeRouter, URLRouter
 from channels.security.websocket import AllowedHostsOriginValidator
 from django.core.asgi import get_asgi_application
 
@@ -23,9 +23,13 @@ from . import routing  # noqa
 
 application = ProtocolTypeRouter(
     {
+        # Regular Django views
         "http": django_asgi_app,
+        # WebSocket consumers
         "websocket": AllowedHostsOriginValidator(
             AuthMiddlewareStack(URLRouter(routing.urlpatterns))
         ),
+        # Background workers
+        "channel": ChannelNameRouter(routing.name_routes),
     }
 )
