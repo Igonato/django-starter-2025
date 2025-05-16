@@ -22,28 +22,28 @@ WORKDIR /app
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-dev --no-install-project \
+    uv sync --locked --no-dev --no-install-project \
     --group pg --group storages --group web
 
 # Copy and install the project
 ADD . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev \
+    uv sync --locked --no-dev \
     --group pg --group storages --group web
 
-# Production image
-FROM python:3.13-slim AS production
+# # Production image
+# FROM python:3.13-slim AS production
 
-WORKDIR /app
+# WORKDIR /app
 
 ENV PATH="/app/.venv/bin:$PATH"
-RUN useradd -m -s /bin/bash app && chown -R app:app /app
+# RUN useradd -m -s /bin/bash app && chown -R app:app /app
 
-# Copy installed packages and app files from the builder image
-COPY --from=builder --chown=app:app /app /app
+# # Copy installed packages and app files from the builder image
+# COPY --from=builder --chown=app:app /app /app
 
 # Run as non-root user
-USER app
+# USER app
 
 # Start Granian server
 CMD ["granian", "config.asgi:application"]

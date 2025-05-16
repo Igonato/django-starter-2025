@@ -9,7 +9,7 @@ services:
     restart: always
     depends_on:
       - db
-      - redis
+      - kv
       - s3
     env_file:
       - .env
@@ -30,7 +30,7 @@ services:
       - DEBUG=True
       - CSRF_TRUSTED_ORIGINS=https://localhost,https://localhost:8443
       - DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
-      - REDIS_CACHE_URL=redis://redis:6379/0
+      - CACHE_URL=redis://kv:6379/0
 
       # Configuration for django-storages
       # See: https://django-storages.readthedocs.io/en/latest/index.html
@@ -44,7 +44,7 @@ services:
       - S3_REGION_NAME=garage
 
       # Channels
-      - CHANNEL_LAYER={"BACKEND":"channels_redis.core.RedisChannelLayer","CONFIG":{"hosts":[["redis", 6379]]}}
+      - CHANNEL_LAYER={"BACKEND":"channels_redis.core.RedisChannelLayer","CONFIG":{"hosts":[["kv", 6379]]}}
 
     command: >
       sh -c "
@@ -92,11 +92,9 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=postgres
 
-  redis:
+  kv:
     image: redis:7
     restart: always
-    volumes:
-      - redis_data:/data
 
   s3:
     build:
@@ -120,5 +118,4 @@ volumes:
   garage_meta:
   media_volume:
   postgres_data:
-  redis_data:
   static_volume:

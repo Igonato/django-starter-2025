@@ -15,3 +15,6 @@ media/
 devops/certs/*.key
 devops/certs/*.crt
 devops/certs/*.pem
+
+# Kubernetes
+devops/k8s/minikube
