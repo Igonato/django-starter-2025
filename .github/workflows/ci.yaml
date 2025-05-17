@@ -13,7 +13,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.13.3"
 
       - name: Install dependencies
         run: |
@@ -44,7 +44,5 @@ jobs:
       - name: Run tests
         run: uv run manage.py test
         env:
-          DEBUG: "True"
+          DJANGO_ENVIRONMENT: "testing"
           SECRET_KEY: "github-actions-test-key"
-          ALLOWED_HOSTS: "localhost,127.0.0.1"
-          DATABASE_URL: "sqlite:///db.sqlite3"

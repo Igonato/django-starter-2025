@@ -1,0 +1,51 @@
+---
+# TODO: introduce the proper setup via the provided helm chart
+# https://garagehq.deuxfleurs.fr/documentation/cookbook/kubernetes/
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: s3-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: s3
+  template:
+    metadata:
+      labels:
+        service: s3
+    spec:
+      containers:
+        - name: s3
+          image: __S3_SERVICE_IMAGE__
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3900
+            - containerPort: 3901
+            - containerPort: 3902
+            - containerPort: 3903
+          env:
+            - name: S3_REGION_NAME
+              value: "garage"
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: web-secrets
+                  key: S3_ACCESS_KEY_ID
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: web-secrets
+                  key: S3_SECRET_ACCESS_KEY
+          volumeMounts:
+            - name: s3-storage-data
+              mountPath: /var/lib/garage/data
+            - name: s3-storage-meta
+              mountPath: /var/lib/garage/meta
+      volumes:
+        - name: s3-storage-data
+          persistentVolumeClaim:
+            claimName: s3-pvc-data
+        - name: s3-storage-meta
+          persistentVolumeClaim:
+            claimName: s3-pvc-meta

@@ -1,6 +1,6 @@
 [tools]
 python = "3.13.3"
-uv = "0.6.13"
+uv = "latest"
 watchexec = "2.3"
 
 [env]
@@ -25,6 +25,7 @@ description = "Check code with Ruff"
 run = "ruff check ."
 
 [tasks.test]
+env = { DJANGO_ENVIRONMENT = "testing" }
 description = "Run tests"
 run = "python manage.py test"
 

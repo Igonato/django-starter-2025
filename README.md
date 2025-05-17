@@ -21,7 +21,7 @@ gh repo clone my-project
 cd my-project
 ```
 
-This template comes with a few examples that are used to test the setup and to showcase the available features. Keep them if you're learning but in a real-life project, remove the examples folder and remove 'examples' from the `INSTALLED_APPS` in the `config/settings.py`:
+This template comes with a few examples that are used to test the setup and to showcase the features. Keep them if you're learning but in a real-life project, remove the examples folder and remove 'examples' from the `INSTALLED_APPS` in the `config/settings.py`:
 
 ```bash
 rm -rf examples
@@ -48,7 +48,7 @@ mise trust && mise install
 uv venv && uv sync --locked
 
 # Install pre-commit
-pre-commit isntall
+pre-commit install
 
 # Create the (SQlite by default) database
 mise migrate
@@ -67,7 +67,7 @@ TODO
 
 Both [mise] and [docker] need to be present.
 
-Run django development server locally and use Docker compose for Postgres, Redis, etc...
+Run Django development server locally and use Docker compose for Postgres, Redis, etc...
 
 TODO
 
@@ -96,6 +96,11 @@ And some developer tools:
 - `django-browser-reload` for automatically reloading browser on file change
 
 <!--
+TODO: Kubernetes with minikube. Describe the dns setup:
+Try ingress-dns addon and if doesn't work, just add a
+loopback to the hosts and use minikube tunnel:
+sudo sh -c 'echo \"127.0.0.1       $PROJECT_NAME.internal\" >> /etc/hosts'
+
 
 ### Developer Experience
 - Local development with just `mise sync && mise migrate && mise dev` using local sqlite file (no Docker or DB setup is needed, until your app needs it and when it does there is a `docker-compose.yaml` waiting for you)

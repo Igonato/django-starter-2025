@@ -1,0 +1,34 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: __PROJECT_NAME__-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: __PROJECT_HOST__
+      http:
+        paths:
+          - path: /s3/(static|media)/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: s3-proxy
+                port:
+                  number: 3902
+          - path: /ws/
+            pathType: Prefix
+            backend:
+              service:
+                name: web
+                port:
+                  number: 8000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web
+                port:
+                  number: 8000

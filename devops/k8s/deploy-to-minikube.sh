@@ -3,7 +3,13 @@ set -e
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 PROJECT_DIR="$( cd "$SCRIPT_DIR/../.." && pwd )"
-PROJECT_NAME=$(basename "$PROJECT_DIR")
+if [[ -z "${PROJECT_NAME}" ]]; then
+    PROJECT_NAME=$(basename "$PROJECT_DIR")
+fi
+
+if [[ -z "${PROJECT_HOST}" ]]; then
+    PROJECT_HOST=$(echo "$PROJECT_NAME.internal")
+fi
 
 # Check if minikube is running
 if ! minikube status | grep -q "Running"; then
@@ -11,12 +17,64 @@ if ! minikube status | grep -q "Running"; then
     minikube start
 fi
 
-# Build the Docker image inside minikube
+# Check if minikube ingress addon is enabled
+if ! minikube addons list | grep -E "ingress.*enabled" > /dev/null; then
+    echo "Minikube ingress addon is not enabled. Enabling..."
+    minikube addons enable ingress
+    minikube addons enable ingress-dns
+fi
+
+echo
 echo "Building Docker image inside minikube..."
 eval $(minikube docker-env)
 docker build -t "$PROJECT_NAME-web:latest" "$PROJECT_DIR"
+docker build -t "$PROJECT_NAME-s3:latest" -f "$PROJECT_DIR/devops/s3/Dockerfile" "$PROJECT_DIR"
 
+
+cd $PROJECT_DIR
+
+echo
+echo "Rendering Kubernetes manifests..."
 rm -rf devops/k8s/minikube
 cp -r devops/k8s/templates devops/k8s/minikube
+sed -i 's/__PROJECT_NAME__/'"$PROJECT_NAME"'/g' \
+    devops/k8s/minikube/*
+sed -i 's/__WEB_SERVICE_IMAGE__/'"$PROJECT_NAME-web:latest"'/g' \
+    devops/k8s/minikube/*
+sed -i 's/__S3_SERVICE_IMAGE__/'"$PROJECT_NAME-s3:latest"'/g' \
+    devops/k8s/minikube/*
+sed -i 's/__DJANGO_SECRET_KEY__/'"$SECRET_KEY"'/g' \
+    devops/k8s/minikube/*
+sed -i 's/__PROJECT_HOST__/'"$PROJECT_HOST"'/g' \
+    devops/k8s/minikube/*
 
-sed -i 's/WEB_SERVICE_IMAGE/'"$PROJECT_NAME-web:latest"'/g' devops/k8s/minikube/*.yaml
+echo
+echo "Deploying to minikube..."
+# Create the namespace if needed
+if ! kubectl get namespace "$PROJECT_NAME" >/dev/null 2>&1; then
+    echo "Creating namespace..."
+    kubectl create namespace "$PROJECT_NAME"
+fi
+
+if kubectl get secret web-secrets --namespace="$PROJECT_NAME" >/dev/null 2>&1; then
+  echo "Secrets already exists. Skipping..."
+else
+  echo "Creating secrets..."
+  kubectl create secret generic web-secrets \
+    --namespace="$PROJECT_NAME" \
+    --from-literal="SECRET_KEY=$(openssl rand -hex 32)" \
+    --from-literal="S3_ACCESS_KEY_ID=GK$(openssl rand -hex 12)" \
+    --from-literal="S3_SECRET_ACCESS_KEY=$(openssl rand -hex 32)"
+fi
+
+echo "Applying manifests..."
+kubectl apply -Rf devops/k8s/minikube -n "$PROJECT_NAME"
+
+echo
+echo "Waiting for services to be ready..."
+kubectl wait --for=condition=ready pod -l service="web" -n "$PROJECT_NAME" --timeout=60s
+
+echo
+echo "Your application should be accessible at https://$PROJECT_HOST"
+echo "You may need to run \"minikube tunnel\" and update your system hosts file"
+echo "See the Kubernetes section of the README.md for details"

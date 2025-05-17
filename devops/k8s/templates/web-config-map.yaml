@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: web-config
+  labels:
+    sevice: web
+data:
+  DEBUG: "False"
+  ALLOWED_HOSTS: '["__PROJECT_HOST__"]'
+  CSRF_TRUSTED_ORIGINS: '["https://__PROJECT_HOST__"]'
+  GRANIAN_INTERFACE: "asginl"
+  GRANIAN_HOST: "0.0.0.0"
+  GRANIAN_PORT: "8000"
+  GRANIAN_WORKERS: "4"
+  CACHE_URL: "redis://localhost:6379/0"
+  DATABASE_ENGINE: "django.db.backends.postgresql"
+  DATABASE_HOST: "db"
+  DATABASE_PORT: "5432"
+  # Extra database options can be provided like this:
+  # DATABASE_EXTRA_OPTIONS: |
+  #   {
+  #     "CONN_MAX_AGE": 600
+  #   }
+  USE_S3: "True"
+  S3_ENDPOINT_URL: "http://s3:3900"
+  S3_REGION_NAME: "garage"
+  S3_CUSTOM_DOMAIN_STATIC: "__PROJECT_HOST__/s3/static"
+  S3_CUSTOM_DOMAIN_MEDIA: "__PROJECT_HOST__/s3/media"
+  CHANNEL_LAYER: |
+    {
+      "BACKEND": "channels_redis.core.RedisChannelLayer",
+      "CONFIG": {"hosts": [["channel-layer", 6379]]}
+    }

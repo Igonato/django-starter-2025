@@ -1,6 +1,14 @@
 #!/bin/bash
 set -e
 
+cd /etc
+cp garage-config-template.toml garage.toml
+sed -i 's/__GARAGE_REPLICATION_FACTOR__/'"${GARAGE_REPLICATION_FACTOR:-1}"'/g' garage.toml
+sed -i 's/__GARAGE_RPC_SECRET__/'"${GARAGE_RPC_SECRET:-0000000000000000000000000000000000000000000000000000000000000000}"'/g' garage.toml
+sed -i 's/__GARAGE_S3_REGION_NAME__/'"${S3_REGION_NAME:-garage}"'/g' garage.toml
+sed -i 's/__GARAGE_ADMIN_TOKEN__/'"${GARAGE_ADMIN_TOKEN:-garage-admin-token-local-dev-only}"'/g' garage.toml
+sed -i 's/__GARAGE_METRICS_TOKEN__/'"${GARAGE_METRICS_TOKEN:-garage-metrics-token-local-dev-only}"'/g' garage.toml
+
 # Start Garage in the background
 garage server &
 GARAGE_PID=$!
@@ -15,15 +23,15 @@ if [ -n "$NODE_ID" ]; then
     echo "Found uninitialized node: $NODE_ID"
 
     # Setup the node
-    garage layout assign -z dev -c 1G $NODE_ID
+    garage layout assign -z dev -c ${GARAGE_INIT_SIZE:-1G} $NODE_ID
     garage layout apply --version 1
 
     # Creates buckets
     garage bucket create django-static
     garage bucket create django-media
 
-    # Add an existing key (so it is known ahead of time)
-    garage key import --yes -n django GKe8f1ee30bf22a8bc86f0d7a2 f49ac00018a30c5060dc07eeacc156781d21c67d38eadff79b52f393a1c4fd87
+    # Add an existing key (simplifies setup since it is known ahead of time)
+    garage key import --yes -n django $S3_ACCESS_KEY_ID $S3_SECRET_ACCESS_KEY
 
     # Change the permissions
     garage bucket allow \

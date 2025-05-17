@@ -11,7 +11,11 @@ lint.select = [
 lint.ignore = []
 
 [lint.per-file-ignores]
-"*/migrations/*.py" = ["E501", "F401"]
+"*/migrations/*.py" = [
+    "E501",  # Line too long
+    "F401",  # Unused imports
+]
+
 
 [format]
 quote-style = "double"

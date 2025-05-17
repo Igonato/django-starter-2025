@@ -1,70 +1,102 @@
+# Garage is used to provide S3 service: https://garagehq.deuxfleurs.fr/
+# See devops/s3/ folder for details about the service setup
+# Development-only S3 credentials. If you wish, you can generate your own via:
+# echo "GK$(openssl rand -hex 12) $(openssl rand -hex 32)"
+x-s3-access: &s3-access
+  S3_ACCESS_KEY_ID: "GK9edb02c5c1ee0b5f2b421c1e"
+  S3_SECRET_ACCESS_KEY: "b714fc912037b7082dc9ff77b1d9ee06aafba2237c9fa59f28a5edd4c15bbb55"
+  S3_REGION_NAME: "garage"
+
+# Common settings between the web and worker services
+x-web-worker-common: &web-worker-common
+  restart: unless-stopped
+  depends_on: [db, cache, s3]
+  env_file:
+    - .env
+  volumes:
+    # For when S3 (django-storages) aren't used
+    - static_volume:/app/staticfiles
+    - media_volume:/app/media
+  environment: &web-worker-common-env
+    DJANGO_DEBUG: "True"
+    DATABASE_URL: "postgres://django:django@db:5432/default"
+    CACHE_URL: "redis://cache:6379/0"
+
+    # Configuration for django-storages
+    # See: https://django-storages.readthedocs.io/en/latest/index.html
+    USE_S3: "True"
+    <<: *s3-access
+    S3_ENDPOINT_URL: "http://s3:3900"
+    S3_CUSTOM_DOMAIN_STATIC: "localhost:${PROXY_PORT_HTTPS:-443}/s3/static"
+    S3_CUSTOM_DOMAIN_MEDIA: "localhost:${PROXY_PORT_HTTPS:-443}/s3/media"
+
+    # Channels
+    CHANNEL_LAYER: |
+      {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {"hosts": [["cache", 6379]]}
+      }
+
 services:
+  web:
+    <<: *web-worker-common
+    build: .
+    environment:
+      <<: *web-worker-common-env
+      # ASGI webserver. See: https://github.com/emmett-framework/granian
+      GRANIAN_INTERFACE: "asginl"
+      GRANIAN_HOST: "0.0.0.0"
+      GRANIAN_PORT: "8000"
+      GRANIAN_WORKERS: "4"
+
+      # Django settings
+      DJANGO_ENVIRONMENT: "production"
+      CSRF_TRUSTED_ORIGINS: |
+        [
+          "https://localhost:${PROXY_PORT_HTTPS:-443}"
+        ]
+
+    command: >
+      sh -c "
+        ./wait-for-it.sh s3:3900 --timeout=30 &&
+        sleep 1 &&
+        python manage.py collectstatic --noinput
+        ./wait-for-it.sh db:5432 --timeout=30 &&
+        python manage.py migrate --noinput &&
+        python manage.py shell -c \"(
+          User.objects.filter(username='admin').exists() or
+          User.objects.create_superuser('admin', 'admin@example.com', 'admin')
+        )\" &&
+        granian config.asgi:application &
+        sleep 3 &&
+        PORT=${PROXY_PORT_HTTPS:-443} \
+        echo \"🚀 Your site is running at: https://localhost:$$PORT\" &&
+        wait
+      "
+
+  worker:
+    <<: *web-worker-common
+    build: .
+    environment:
+      <<: *web-worker-common-env
+      DJANGO_ENVIRONMENT: "worker"
+    command: >
+      sh -c "
+        ./wait-for-it.sh cache:6379 --timeout=30 &&
+        sleep 1 &&
+        python manage.py runworker background-task-example
+      "
+
   certs:
     build: ./devops/certs
     volumes:
       - ./devops/certs:/certs
 
-  web:
-    build: .
-    restart: always
-    depends_on:
-      - db
-      - kv
-      - s3
-    env_file:
-      - .env
-    volumes:
-      - ./devops/wait-for-it.sh:/app/wait-for-it.sh
-      - static_volume:/app/staticfiles
-      - media_volume:/app/media
-    environment:
-      - DJANGO_ENVIRONMENT=production
-
-      # ASGI webserver. See: https://github.com/emmett-framework/granian
-      - GRANIAN_INTERFACE=asginl
-      - GRANIAN_HOST=0.0.0.0
-      - GRANIAN_PORT=8000
-      - GRANIAN_WORKERS=4
-
-      # Generic Django settings
-      - DEBUG=True
-      - CSRF_TRUSTED_ORIGINS=https://localhost,https://localhost:8443
-      - DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
-      - CACHE_URL=redis://kv:6379/0
-
-      # Configuration for django-storages
-      # See: https://django-storages.readthedocs.io/en/latest/index.html
-      - USE_S3=True
-      - S3_CUSTOM_DOMAIN_STATIC=localhost:8443/s3/static
-      - S3_CUSTOM_DOMAIN_MEDIA=localhost:8443/s3/media
-      # Set during the initialisation in the devops/s3/entrypoint.sh
-      - S3_ACCESS_KEY_ID=GKe8f1ee30bf22a8bc86f0d7a2
-      - S3_SECRET_ACCESS_KEY=f49ac00018a30c5060dc07eeacc156781d21c67d38eadff79b52f393a1c4fd87
-      # This is specified in garage.toml
-      - S3_REGION_NAME=garage
-
-      # Channels
-      - CHANNEL_LAYER={"BACKEND":"channels_redis.core.RedisChannelLayer","CONFIG":{"hosts":[["kv", 6379]]}}
-
-    command: >
-      sh -c "
-        chmod +x wait-for-it.sh &&
-        ./wait-for-it.sh s3:3900 --timeout=30 &&
-        python manage.py collectstatic --noinput
-        ./wait-for-it.sh db:5432 --timeout=30 &&
-        python manage.py migrate --noinput &&
-        granian config.asgi:application &
-        sleep 3 &&
-        echo '🚀 Your site is running at: https://localhost:8443' &&
-        wait
-      "
-
   proxy:
     image: nginx:1.27
     ports:
-      - "8000:80"
-      - "443:443"
-      - "8443:443"
+      - "${PROXY_PORT_HTTP:-80}:80"
+      - "${PROXY_PORT_HTTPS:-443}:443"
     volumes:
       - ./devops/nginx.conf:/etc/nginx/conf.d/default.conf
       - ./devops/certs:/etc/nginx/certs
@@ -85,33 +117,32 @@ services:
 
   db:
     image: postgres:17
+    ports:
+      - "${DB_FORWARD_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=postgres
+      - POSTGRES_USER=django
+      - POSTGRES_PASSWORD=django
+      - POSTGRES_DB=default
 
-  kv:
-    image: redis:7
-    restart: always
+  cache:
+    image: valkey/valkey:8
+    ports:
+      - "${CACHE_FORWARD_PORT:-6379}:6379"
 
   s3:
     build:
       context: .
       dockerfile: ./devops/s3/Dockerfile
-
-    # ports:
-    #   - "3900:3900" # S3 API
-    #   - "3901:3901" # Admin API
-    #   - "3902:3902" # Web server for buckets
-    #   - "3903:3903" # Admin API server
-    #   - "3904:3904" # K2V API
-
+    ports:
+      - "${S3_API_FORWARD_PORT:-3900}:3900" # S3 API
+      - "${S3_WEB_FORWARD_PORT:-3902}:3902" # Web server for the buckets
     volumes:
-      - ./devops/s3/garage-dev-config.toml:/etc/garage.toml
+      - ./devops/s3/garage-config-template.toml:/etc/garage-config-template.toml
       - garage_data:/var/lib/garage/data
       - garage_meta:/var/lib/garage/meta
+    environment: *s3-access
 
 volumes:
   garage_data:

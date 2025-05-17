@@ -1,3 +1,5 @@
+# Inspired https://github.com/astral-sh/uv-docker-example
+# Multistage build can shave a few megabytes of the image but loses on speed
 FROM python:3.13.3-slim AS builder
 
 # Set environment variables
@@ -14,9 +16,12 @@ ENV PYTHONUNBUFFERED=1 \
 #     && rm -rf /var/lib/apt/lists/*
 
 # Install uv for dependency management
-RUN pip install uv
+RUN pip install uv==0.7.13
 
 WORKDIR /app
+
+COPY devops/wait-for-it.sh wait-for-it.sh
+RUN chmod +x wait-for-it.sh
 
 # Install dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \

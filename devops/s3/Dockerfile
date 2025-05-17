@@ -1,5 +1,5 @@
 # S3-compatible service https://garagehq.deuxfleurs.fr/
-FROM dxflrs/garage:v2.0.0-beta1 AS garage
+FROM dxflrs/garage:v2.0.0 AS garage
 
 FROM alpine:3.21.3
 
@@ -13,7 +13,7 @@ COPY --from=garage /garage /usr/local/bin/garage
 RUN chmod +x /usr/local/bin/garage
 
 COPY devops/wait-for-it.sh /wait-for-it.sh
-COPY devops/s3/garage-dev-config.toml /etc/garage.toml
+COPY devops/s3/garage-config-template.toml /etc/garage-config-template.toml
 COPY devops/s3/entrypoint.sh /entrypoint.sh
 
 RUN chmod +x /entrypoint.sh /wait-for-it.sh

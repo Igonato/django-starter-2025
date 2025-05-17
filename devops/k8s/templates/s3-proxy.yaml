@@ -1,0 +1,66 @@
+---
+# TODO: garage supports host-based buckets, so should just use the subdomains:
+# static.projectname.internal and static.projectname.internal respectively
+# There will be no need in this separate proxy
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: s3-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: s3-proxy
+  template:
+    metadata:
+      labels:
+        app: s3-proxy
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+      volumes:
+        - name: config-volume
+          configMap:
+            name: s3-proxy-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: s3-proxy-config
+data:
+  default.conf: |
+    server {
+        listen 80;
+
+        location ~ ^/s3/(static|media)/ {
+            set $bucket "django-$1";
+
+            rewrite ^/s3/(static|media)/(.*)$ /$2 break;
+
+            proxy_pass http://s3:3902;
+            proxy_set_header Host $bucket.web.s3;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            expires 30d;
+            add_header Cache-Control "public, max-age=2592000";
+        }
+    }
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: s3-proxy
+spec:
+  selector:
+    app: s3-proxy
+  ports:
+    - port: 3902
+      targetPort: 80

@@ -4,6 +4,6 @@
 Dockerfile
 README.md
 db.sqlite3
-docker-compose.yml
+docker-compose.yaml
 media
 staticfiles

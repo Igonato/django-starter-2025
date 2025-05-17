@@ -1,0 +1,20 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: channel-layer-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: channel-layer
+  template:
+    metadata:
+      labels:
+        service: channel-layer
+    spec:
+      containers:
+        - name: channel-layer
+          image: valkey/valkey:8
+          ports:
+            - containerPort: 6379
