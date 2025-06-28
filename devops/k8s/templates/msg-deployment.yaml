@@ -2,19 +2,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: channel-layer-deployment
+  name: msg-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      service: channel-layer
+      service: msg
   template:
     metadata:
       labels:
-        service: channel-layer
+        service: msg
     spec:
       containers:
-        - name: channel-layer
+        - name: msg
           image: valkey/valkey:8
           ports:
             - containerPort: 6379

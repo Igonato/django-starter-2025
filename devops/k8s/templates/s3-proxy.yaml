@@ -37,10 +37,10 @@ data:
     server {
         listen 80;
 
-        location ~ ^/s3/(static|media)/ {
+        location ~ ^/(static|media)/ {
             set $bucket "django-$1";
 
-            rewrite ^/s3/(static|media)/(.*)$ /$2 break;
+            rewrite ^/(static|media)/(.*)$ /$2 break;
 
             proxy_pass http://s3:3902;
             proxy_set_header Host $bucket.web.s3;

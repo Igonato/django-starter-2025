@@ -24,10 +24,10 @@ data:
   USE_S3: "True"
   S3_ENDPOINT_URL: "http://s3:3900"
   S3_REGION_NAME: "garage"
-  S3_CUSTOM_DOMAIN_STATIC: "__PROJECT_HOST__/s3/static"
-  S3_CUSTOM_DOMAIN_MEDIA: "__PROJECT_HOST__/s3/media"
+  S3_CUSTOM_DOMAIN_STATIC: "__PROJECT_HOST__/static"
+  S3_CUSTOM_DOMAIN_MEDIA: "__PROJECT_HOST__/media"
   CHANNEL_LAYER: |
     {
       "BACKEND": "channels_redis.core.RedisChannelLayer",
-      "CONFIG": {"hosts": [["channel-layer", 6379]]}
+      "CONFIG": {"hosts": [["msg", 6379]]}
     }

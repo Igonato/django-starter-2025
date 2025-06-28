@@ -7,11 +7,17 @@ metadata:
     nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   ingressClassName: nginx
+  # TLS_SECTION_START
+  tls:
+    - hosts:
+        - __PROJECT_HOST__
+      secretName: __TLS_SECRET_NAME__
+  # TLS_SECTION_END
   rules:
     - host: __PROJECT_HOST__
       http:
         paths:
-          - path: /s3/(static|media)/(.*)
+          - path: /(static|media)/(.*)
             pathType: ImplementationSpecific
             backend:
               service:

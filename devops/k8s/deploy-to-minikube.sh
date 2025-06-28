@@ -67,6 +67,33 @@ else
     --from-literal="S3_SECRET_ACCESS_KEY=$(openssl rand -hex 32)"
 fi
 
+if command -v mkcert >/dev/null 2>&1; then
+    echo "Generating TLS certificates..."
+
+    # Temporary directory for certificates
+    CERT_DIR=$(mktemp -d)
+    trap "rm -rf $CERT_DIR" EXIT
+
+    mkcert -cert-file "$CERT_DIR/tls.crt" -key-file "$CERT_DIR/tls.key" "$PROJECT_HOST"
+
+    if kubectl get secret "$PROJECT_NAME-tls" --namespace="$PROJECT_NAME" >/dev/null 2>&1; then
+        echo "TLS secret already exists. Updating..."
+        kubectl delete secret "$PROJECT_NAME-tls" --namespace="$PROJECT_NAME"
+    fi
+
+    echo "Creating certificate secret..."
+    kubectl create secret tls "$PROJECT_NAME-cert" \
+        --cert="$CERT_DIR/tls.crt" \
+        --key="$CERT_DIR/tls.key" \
+        --namespace="$PROJECT_NAME"
+
+    sed -i 's/__TLS_SECRET_NAME__/'"$PROJECT_NAME-cert"'/g' devops/k8s/minikube/*
+else
+    echo "Skipping certificate generation... (mkcert not found)"
+    echo "Install mkcert (https://github.com/FiloSottile/mkcert) for automatic HTTPS support."
+    sed -i '/# TLS_SECTION_START/,/# TLS_SECTION_END/d' devops/k8s/minikube/*
+fi
+
 echo "Applying manifests..."
 kubectl apply -Rf devops/k8s/minikube -n "$PROJECT_NAME"
 
