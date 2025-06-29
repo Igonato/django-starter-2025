@@ -139,7 +139,6 @@ TEMPLATES = [
 ASGI_APPLICATION = "config.asgi.application"
 WSGI_APPLICATION = "config.wsgi.application"
 
-
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 DATABASE_URL = os.getenv("DATABASE_URL", None)
@@ -164,7 +163,6 @@ DATABASES["default"].update(
     literal_eval(os.getenv("DATABASE_EXTRA_OPTIONS", "{}"))
 )
 
-
 # Cache and session store if CACHE_URL is provided (Redis-compatible)
 CACHE_URL = os.getenv("CACHE_URL")
 if CACHE_URL:
@@ -179,7 +177,6 @@ if CACHE_URL:
     # Session
     SESSION_ENGINE = "django.contrib.sessions.backends.cache"
     SESSION_CACHE_ALIAS = "default"
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -202,7 +199,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 LANGUAGE_CODE = "en-us"
@@ -213,12 +209,15 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 # Optionally via django-storages
 # https://django-storages.readthedocs.io/en/latest/
-if os.getenv("USE_S3", "False").lower() == "true":
+USE_S3 = os.getenv("USE_S3", "False").lower() == "true"
+if USE_S3:
+    S3_ENDPOINT_URL = f"{os.getenv('S3_SCHEME', 'http')}://{
+        os.getenv('S3_HOST', 's3')
+    }:{os.getenv('S3_PORT', '3900')}"
     STORAGES = {
         "default": {
             "BACKEND": "storages.backends.s3.S3Storage",
@@ -228,7 +227,7 @@ if os.getenv("USE_S3", "False").lower() == "true":
                 "bucket_name": os.getenv(
                     "S3_STORAGE_BUCKET_NAME_MEDIA", "django-media"
                 ),
-                "endpoint_url": os.getenv("S3_ENDPOINT_URL"),
+                "endpoint_url": S3_ENDPOINT_URL,
                 "region_name": os.getenv("S3_REGION_NAME"),
                 "custom_domain": os.getenv("S3_CUSTOM_DOMAIN_MEDIA"),
                 "url_protocol": os.getenv("S3_URL_PROTOCOL", "https:"),
@@ -247,7 +246,7 @@ if os.getenv("USE_S3", "False").lower() == "true":
                 "bucket_name": os.getenv(
                     "S3_STORAGE_BUCKET_NAME_STATIC", "django-static"
                 ),
-                "endpoint_url": os.getenv("S3_ENDPOINT_URL"),
+                "endpoint_url": S3_ENDPOINT_URL,
                 "region_name": os.getenv("S3_REGION_NAME"),
                 "custom_domain": os.getenv("S3_CUSTOM_DOMAIN_STATIC"),
                 "url_protocol": os.getenv("S3_URL_PROTOCOL", "https:"),
@@ -285,7 +284,7 @@ else:
     MEDIA_ROOT = BASE_DIR / "media"
 
 # Custom admin URL
-ADMIN_URL = os.getenv("DJANGO_ADMIN_URL", "admin/")
+ADMIN_PATH = os.getenv("DJANGO_ADMIN_PATH", "admin/")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -296,7 +295,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "users.User"
 
 # Channels configuration (support for WebSockets and background workers)
-# https://channels.readthedocs.io/en/latest/index.html
+# https://channels.readthedocs.io/en/latest/
 CHANNEL_LAYERS = {
     "default": literal_eval(
         os.getenv(
@@ -305,3 +304,30 @@ CHANNEL_LAYERS = {
         )
     )
 }
+
+# Health check setup
+# https://django-health-check.readthedocs.io/en/latest/
+USE_HEALTH_CHECK = os.getenv("USE_HEALTH_CHECK", "False").lower() == "true"
+HEALTH_CHECK_PATH = os.getenv("HEALTH_CHECK_PATH", None)
+if USE_HEALTH_CHECK:
+    INSTALLED_APPS += [
+        "health_check",
+        "health_check.db",
+        "health_check.contrib.migrations",
+        "health_check.contrib.psutil",
+    ]
+    if CACHE_URL:
+        INSTALLED_APPS += ["health_check.cache"]
+    if USE_S3:
+        INSTALLED_APPS += [
+            "health_check.storage",
+            "health_check.contrib.s3boto3_storage",
+        ]
+    HEALTH_CHECK = {
+        "SUBSETS": {
+            "liveness-probe": [],
+        },
+    }
+    K8S_ADDRESS = os.getenv("WEB_SERVICE_HOST", None)
+    if K8S_ADDRESS:
+        ALLOWED_HOSTS.append(K8S_ADDRESS)

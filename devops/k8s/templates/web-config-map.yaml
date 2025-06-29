@@ -5,8 +5,13 @@ metadata:
   labels:
     sevice: web
 data:
-  DEBUG: "False"
-  ALLOWED_HOSTS: '["__PROJECT_HOST__"]'
+  DJANGO_DEBUG: "False"
+  ALLOWED_HOSTS: |
+    [
+      "__PROJECT_HOST__",
+    ]
+  USE_HEALTH_CHECK: "True"
+  HEALTH_CHECK_PATH: "ht/"
   CSRF_TRUSTED_ORIGINS: '["https://__PROJECT_HOST__"]'
   GRANIAN_INTERFACE: "asginl"
   GRANIAN_HOST: "0.0.0.0"
@@ -22,7 +27,9 @@ data:
   #     "CONN_MAX_AGE": 600
   #   }
   USE_S3: "True"
-  S3_ENDPOINT_URL: "http://s3:3900"
+  S3_SCHEME: "http"
+  S3_HOST: "s3"
+  S3_PORT: "3900"
   S3_REGION_NAME: "garage"
   S3_CUSTOM_DOMAIN_STATIC: "__PROJECT_HOST__/static"
   S3_CUSTOM_DOMAIN_MEDIA: "__PROJECT_HOST__/media"

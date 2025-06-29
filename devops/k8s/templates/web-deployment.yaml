@@ -30,14 +30,38 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+            requests:
+              cpu: "250m"
+              memory: "128Mi"
+          livenessProbe:
+            httpGet:
+              path: /ht/liveness-probe/
+              port: 8000
+              httpHeaders:
+                - name: Host
+                  value: __PROJECT_HOST__
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ht/
+              port: 8000
+              httpHeaders:
+                - name: Host
+                  value: __PROJECT_HOST__
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
           envFrom:
             - configMapRef:
                 name: web-config
           env:
             - name: DJANGO_ENVIRONMENT
               value: "production"
-            - name: DJANGO_DEBUG
-              value: "True"
             - name: SECRET_KEY
               valueFrom:
                 secretKeyRef:

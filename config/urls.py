@@ -24,8 +24,13 @@ from django.urls import include, path
 from django.views.debug import default_urlconf
 
 urlpatterns = [
-    path(settings.ADMIN_URL, admin.site.urls),
+    path(settings.ADMIN_PATH, admin.site.urls),
 ]
+
+if settings.USE_HEALTH_CHECK and settings.HEALTH_CHECK_PATH:
+    urlpatterns += [
+        path(settings.HEALTH_CHECK_PATH, include("health_check.urls")),
+    ]
 
 if settings.DEBUG:
     urlpatterns += [

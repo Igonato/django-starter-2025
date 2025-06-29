@@ -54,7 +54,7 @@ if [ -n "$NODE_ID" ]; then
 
     echo "🧺 Garage initialization complete! ✨"
 else
-    echo "🧺 Garage node already initialized, skipping the setup..."
+    echo "🧺 Garage node is already initialized, skipping the setup..."
 fi
 
 # Keep the script running with the Garage server process

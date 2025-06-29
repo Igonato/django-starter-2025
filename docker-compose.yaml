@@ -1,5 +1,5 @@
-# Garage is used to provide S3 service: https://garagehq.deuxfleurs.fr/
-# See devops/s3/ folder for details about the service setup
+# Garage (https://garagehq.deuxfleurs.fr/) is used to provide S3 service.
+# See devops/s3/ folder for details about the service setup.
 # Development-only S3 credentials. If you wish, you can generate your own via:
 # echo "GK$(openssl rand -hex 12) $(openssl rand -hex 32)"
 x-s3-access: &s3-access
@@ -7,7 +7,7 @@ x-s3-access: &s3-access
   S3_SECRET_ACCESS_KEY: "b714fc912037b7082dc9ff77b1d9ee06aafba2237c9fa59f28a5edd4c15bbb55"
   S3_REGION_NAME: "garage"
 
-# Common settings between the web and worker services
+# Common settings between the web and the worker services
 x-web-worker-common: &web-worker-common
   restart: unless-stopped
   depends_on: [db, cache, s3]
@@ -26,7 +26,9 @@ x-web-worker-common: &web-worker-common
     # See: https://django-storages.readthedocs.io/en/latest/index.html
     USE_S3: "True"
     <<: *s3-access
-    S3_ENDPOINT_URL: "http://s3:3900"
+    S3_SCHEME: "http"
+    S3_HOST: "s3"
+    S3_PORT: "3900"
     S3_CUSTOM_DOMAIN_STATIC: "localhost:${PROXY_PORT_HTTPS:-443}/s3/static"
     S3_CUSTOM_DOMAIN_MEDIA: "localhost:${PROXY_PORT_HTTPS:-443}/s3/media"
 
@@ -55,6 +57,16 @@ services:
         [
           "https://localhost:${PROXY_PORT_HTTPS:-443}"
         ]
+
+      USE_HEALTH_CHECK: "True"
+      HEALTH_CHECK_PATH: "ht/"
+
+    healthcheck:
+      test: ["CMD", "python", "manage.py", "health_check"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
     command: >
       sh -c "

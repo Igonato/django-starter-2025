@@ -76,9 +76,9 @@ if command -v mkcert >/dev/null 2>&1; then
 
     mkcert -cert-file "$CERT_DIR/tls.crt" -key-file "$CERT_DIR/tls.key" "$PROJECT_HOST"
 
-    if kubectl get secret "$PROJECT_NAME-tls" --namespace="$PROJECT_NAME" >/dev/null 2>&1; then
+    if kubectl get secret "$PROJECT_NAME-cert" --namespace="$PROJECT_NAME" >/dev/null 2>&1; then
         echo "TLS secret already exists. Updating..."
-        kubectl delete secret "$PROJECT_NAME-tls" --namespace="$PROJECT_NAME"
+        kubectl delete secret "$PROJECT_NAME-cert" --namespace="$PROJECT_NAME"
     fi
 
     echo "Creating certificate secret..."
@@ -90,9 +90,15 @@ if command -v mkcert >/dev/null 2>&1; then
     sed -i 's/__TLS_SECRET_NAME__/'"$PROJECT_NAME-cert"'/g' devops/k8s/minikube/*
 else
     echo "Skipping certificate generation... (mkcert not found)"
-    echo "Install mkcert (https://github.com/FiloSottile/mkcert) for automatic HTTPS support."
+    echo "Install mkcert (https://github.com/FiloSottile/mkcert)"
+    echo "to automatically generate valid local HTTPS certificates."
     sed -i '/# TLS_SECTION_START/,/# TLS_SECTION_END/d' devops/k8s/minikube/*
 fi
+
+# Ensure that migrate and collectstatic jobs will rerun
+# In produciton you can tie this to app version... Or leave it as-is
+kubectl delete job "$PROJECT_NAME-migrate-job" -n "$PROJECT_NAME" --ignore-not-found=true
+kubectl delete job "$PROJECT_NAME-collectstatic-job" -n "$PROJECT_NAME" --ignore-not-found=true
 
 echo "Applying manifests..."
 kubectl apply -Rf devops/k8s/minikube -n "$PROJECT_NAME"

@@ -1,0 +1,108 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: __PROJECT_NAME__-migrate-job
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: __WEB_SERVICE_IMAGE__
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              ./wait-for-it.sh $DATABASE_HOST:$DATABASE_PORT --timeout=30
+              echo "Running Django migrations..."
+              python manage.py migrate --noinput
+          envFrom:
+            - configMapRef:
+                name: web-config
+          env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: web-secrets
+                  key: SECRET_KEY
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: web-secrets
+                  key: S3_ACCESS_KEY_ID
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: web-secrets
+                  key: S3_SECRET_ACCESS_KEY
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: POSTGRES_USER
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: POSTGRES_PASSWORD
+            - name: DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: POSTGRES_DB
+  backoffLimit: 3
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: __PROJECT_NAME__-collectstatic-job
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: __WEB_SERVICE_IMAGE__
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              ./wait-for-it.sh $S3_HOST:$S3_PORT --timeout=30
+              echo "Collecting static files..."
+              python manage.py collectstatic --noinput
+          envFrom:
+            - configMapRef:
+                name: web-config
+          env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: web-secrets
+                  key: SECRET_KEY
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: web-secrets
+                  key: S3_ACCESS_KEY_ID
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: web-secrets
+                  key: S3_SECRET_ACCESS_KEY
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: POSTGRES_USER
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: POSTGRES_PASSWORD
+            - name: DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: POSTGRES_DB
+  backoffLimit: 3
