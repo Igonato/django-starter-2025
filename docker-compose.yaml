@@ -21,6 +21,7 @@ x-web-worker-common: &web-worker-common
     DJANGO_DEBUG: "True"
     DATABASE_URL: "postgres://django:django@db:5432/default"
     CACHE_URL: "redis://cache:6379/0"
+    SESSION_COOKIE_SECURE: "True"
 
     # Configuration for django-storages
     # See: https://django-storages.readthedocs.io/en/latest/index.html

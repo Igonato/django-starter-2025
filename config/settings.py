@@ -53,6 +53,11 @@ ALLOWED_HOSTS = literal_eval(
 # Trust the X-Forwarded-Proto header from our proxy
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+# Use secure cookies unless explicitly set to false
+SESSION_COOKIE_SECURE = not (
+    os.getenv("SESSION_COOKIE_SECURE", "True").lower() == "false"
+)
+
 # Trust origins from ALLOWED_HOSTS unless a specific list is given
 _csrf_trusted_origins_str = os.getenv("CSRF_TRUSTED_ORIGINS", None)
 
