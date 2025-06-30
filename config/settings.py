@@ -336,3 +336,15 @@ if USE_HEALTH_CHECK:
     K8S_ADDRESS = os.getenv("WEB_SERVICE_HOST", None)
     if K8S_ADDRESS:
         ALLOWED_HOSTS.append(K8S_ADDRESS)
+
+# Email settings
+# https://docs.djangoproject.com/en/5.2/topics/email/
+EMAIL_BACKEND = os.environ.get(
+    "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
+)
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "localhost")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "25"))
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "False").lower() == "true"
+EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "False").lower() == "true"
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")

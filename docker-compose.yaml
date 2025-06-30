@@ -33,12 +33,15 @@ x-web-worker-common: &web-worker-common
     S3_CUSTOM_DOMAIN_STATIC: "localhost:${PROXY_PORT_HTTPS:-443}/s3/static"
     S3_CUSTOM_DOMAIN_MEDIA: "localhost:${PROXY_PORT_HTTPS:-443}/s3/media"
 
-    # Channels
     CHANNEL_LAYER: |
       {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {"hosts": [["cache", 6379]]}
       }
+
+    EMAIL_BACKEND: "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST: "mail"
+    EMAIL_PORT: "1025"
 
 services:
   web:
@@ -157,9 +160,24 @@ services:
       - garage_meta:/var/lib/garage/meta
     environment: *s3-access
 
+  mail:
+    image: axllent/mailpit:v1.27
+    restart: unless-stopped
+    volumes:
+      - mailpit_data:/data
+    ports:
+      - "${SMTP_FORWARD_PORT:-1025}:1025"
+      - "${MAILPIT_WEB_FORWARD_PORT:-8025}:8025"
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
 volumes:
   garage_data:
   garage_meta:
+  mailpit_data:
   media_volume:
   postgres_data:
   static_volume:
