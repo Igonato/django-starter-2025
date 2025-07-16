@@ -335,11 +335,13 @@ if USE_HEALTH_CHECK:
     ]
     if CACHE_URL:
         INSTALLED_APPS += ["health_check.cache"]
-    if USE_S3:
-        INSTALLED_APPS += [
-            "health_check.storage",
-            "health_check.contrib.s3boto3_storage",
-        ]
+    # Leaks memory!
+    # TODO: investigate and report
+    # if USE_S3:
+    #     INSTALLED_APPS += [
+    #         "health_check.storage",
+    #         "health_check.contrib.s3boto3_storage",
+    #     ]
     if EMAIL_HOST != "localhost":
         INSTALLED_APPS += [
             "health_check.contrib.mail",

@@ -43,8 +43,6 @@ sed -i 's/__WEB_SERVICE_IMAGE__/'"$PROJECT_NAME-web:latest"'/g' \
     devops/k8s/minikube/*
 sed -i 's/__S3_SERVICE_IMAGE__/'"$PROJECT_NAME-s3:latest"'/g' \
     devops/k8s/minikube/*
-sed -i 's/__DJANGO_SECRET_KEY__/'"$SECRET_KEY"'/g' \
-    devops/k8s/minikube/*
 sed -i 's/__PROJECT_HOST__/'"$PROJECT_HOST"'/g' \
     devops/k8s/minikube/*
 
@@ -57,14 +55,14 @@ if ! kubectl get namespace "$PROJECT_NAME" >/dev/null 2>&1; then
 fi
 
 if kubectl get secret web-secrets --namespace="$PROJECT_NAME" >/dev/null 2>&1; then
-  echo "Secrets already exists. Skipping..."
+    echo "Secrets already exists. Skipping..."
 else
-  echo "Creating secrets..."
-  kubectl create secret generic web-secrets \
-    --namespace="$PROJECT_NAME" \
-    --from-literal="SECRET_KEY=$(openssl rand -hex 32)" \
-    --from-literal="S3_ACCESS_KEY_ID=GK$(openssl rand -hex 12)" \
-    --from-literal="S3_SECRET_ACCESS_KEY=$(openssl rand -hex 32)"
+    echo "Creating secrets..."
+    kubectl create secret generic web-secrets \
+        --namespace="$PROJECT_NAME" \
+        --from-literal="SECRET_KEY=$(openssl rand -hex 32)" \
+        --from-literal="S3_ACCESS_KEY_ID=GK$(openssl rand -hex 12)" \
+        --from-literal="S3_SECRET_ACCESS_KEY=$(openssl rand -hex 32)"
 fi
 
 if command -v mkcert >/dev/null 2>&1; then
